@@ -8,7 +8,7 @@ User = get_user_model()
 class RegisterSerializer(serializers.ModelSerializer):
     full_name = serializers.CharField(write_only=True)
     cpf = serializers.CharField(write_only=True)
-
+    email = serializers.EmailField()
     password = serializers.CharField(write_only=True)
     password2 = serializers.CharField(write_only=True)
 
@@ -22,9 +22,9 @@ class RegisterSerializer(serializers.ModelSerializer):
             "password2",
         ]
 
-    def validate_email(self, data):
+    def validate(self, data):
         if data["password"] !=data["password2"]:
-            raise serializers.ValidationError("As senhas não coincidem")
+            raise serializers.ValidationError({"password": "As senhas não coincidem"})
         return data
     
     def validate_cpf(self, value):
