@@ -37,6 +37,15 @@ class OrderSerializer(serializers.ModelSerializer):
             "status",
             "total",
             "created_at",
+
+            # ENDEREÇO DO PEDIDO
+            "street",
+            "number",
+            "neighborhood",
+            "city",
+            "state",
+            "zip_code",
+
             "items",
         ]
 
@@ -46,6 +55,8 @@ class OrderSerializer(serializers.ModelSerializer):
 class OrderItemCreateSerializer(serializers.Serializer):
     product_id = serializers.IntegerField()
     quantity = serializers.IntegerField()
+    size = serializers.CharField()
+    color = serializers.CharField()
 
 # =========================
 # CRIAR ITEM
