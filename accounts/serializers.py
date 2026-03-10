@@ -63,3 +63,18 @@ class AddressSerializer(serializers.ModelSerializer):
             "zip_code",
             "is_default",
         ]
+    def create(self, validated_data):
+        user = validated_data["user"]
+
+        if validated_data.get("is_default"):
+            Address.objects.filter(user=user, is_default=True).update(is_default=False)
+
+        return Address.objects.create(**validated_data)
+
+    def update(self, instance, validated_data):
+        user = instance.user
+
+        if validated_data.get("is_default"):
+            Address.objects.filter(user=user, is_default=True).exclude(id=instance.id).update(is_default=False)
+
+        return super().update(instance, validated_data)
