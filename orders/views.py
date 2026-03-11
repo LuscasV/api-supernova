@@ -1,4 +1,5 @@
 from rest_framework.generics import CreateAPIView, ListAPIView, RetrieveAPIView
+from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
@@ -32,3 +33,34 @@ class OrderDetailView(RetrieveAPIView):
 
     def get_queryset(self):
         return Order.objects.filter(user=self.request.user)
+
+# CANCELAR ORDER
+class CancelOrderView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, pk):
+        try:
+            order = Order.objects.get(pk=pk, user=request.user)
+        except Order.DoesNotExist:
+            return Response(
+                {"detail":"Pedido não encontrado."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        if order.status in ["shipped", "delivered"]:
+            return Response(
+                {"detail":"Este pedido não pode mais ser cancelado."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        if order.status == "canceled":
+            return Response(
+                {"detail": "Pedido já cancelado."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        order.status = "canceled"
+        order.save()
+
+        return Response(
+            {"detail": "Pedido cancelado com sucesso."},
+            status=status.HTTP_200_OK
+        )
