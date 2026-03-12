@@ -24,20 +24,21 @@ class GenderSerializer(serializers.ModelSerializer):
 # CATEGORY (com hierarquia)
 # =========================
 class CategorySerializer(serializers.ModelSerializer):
-    parent = serializers.SerializerMethodField()
+    children = serializers.SerializerMethodField()
 
     class Meta:
         model = Category
-        fields = ["id", "name", "slug", "parent"]
+        fields = ["id", "name", "slug", "children"]
 
-    def get_parent(self, obj):
-        if obj.parent:
-            return {
-                "id": obj.parent.id,
-                "name": obj.parent.name,
-                "slug": obj.parent.slug,
+    def get_children(self, obj):
+        return [
+            {
+                "id": obj.child.id,
+                "name": obj.child.name,
+                "slug": obj.child.slug,
             }
-        return None
+            for child in obj.subcategories.all()
+        ]
 
 
 # =========================

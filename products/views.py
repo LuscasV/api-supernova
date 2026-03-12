@@ -1,6 +1,7 @@
 from rest_framework import generics
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework.filters import OrderingFilter
 from .models import Product, Category, Gender
 from .serializers import ProductSerializer, CategorySerializer
 from rest_framework.generics import ListAPIView, RetrieveAPIView
@@ -11,7 +12,7 @@ class CategoryListView(generics.ListAPIView):
     serializer_class = CategorySerializer
 
     def get_queryset(self):
-        queryset = Category.objects.all()
+        queryset = Category.objects.filter(parent__isnull=True)
         gender = self.request.query_params.get("gender")
 
         if gender:
@@ -22,6 +23,8 @@ class CategoryListView(generics.ListAPIView):
 
 class ProductListView(generics.ListAPIView):
     serializer_class = ProductSerializer
+    filter_backends = [OrderingFilter]
+    ordering_fields = ["price", "created_at"]
 
     def get_queryset(self):
         queryset = Product.objects.filter(is_active=True).order_by("-created_at")
