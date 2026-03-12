@@ -1,6 +1,7 @@
 from django.db import models
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser, BaseUserManager
+from products.models import Product, Size, Color
 
 class UserManager(BaseUserManager):
     use_in_migrations = True
@@ -72,3 +73,37 @@ class Address(models.Model):
     def __str__(self):
         return f"{self.street}, {self.number}"
 
+class WishlistItem(models.Model):
+    profile = models.ForeignKey(
+        Profile,
+        related_name="wishlist_items",
+        on_delete=models.CASCADE
+    )
+
+    product = models.ForeignKey(
+        Product,
+        related_name="wishlisted_by",
+        on_delete=models.CASCADE
+    )
+
+    size = models.ForeignKey(
+        Size,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True
+    )
+
+    color = models.ForeignKey(
+        Color,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("profile", "product") # impede de favoritar o mesmo produto 2 vezes
+    
+    def __str__(self):
+        return f"{self.profile.full_name} - {self.product.name}"
