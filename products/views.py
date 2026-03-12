@@ -4,27 +4,42 @@ from rest_framework.response import Response
 from .models import Product, Category, Gender
 from .serializers import ProductSerializer, CategorySerializer
 from rest_framework.generics import ListAPIView, RetrieveAPIView
+from django.db.models import Q
 
 
 class CategoryListView(generics.ListAPIView):
-    queryset = Category.objects.all()
     serializer_class = CategorySerializer
+
+    def get_queryset(self):
+        queryset = Category.objects.all()
+        gender = self.request.query_params.get("gender")
+
+        if gender:
+            queryset = queryset.filter(products__gender__slug=gender).distinct()
+
+        return queryset
 
 
 class ProductListView(generics.ListAPIView):
     serializer_class = ProductSerializer
 
     def get_queryset(self):
-        queryset = Product.objects.filter(is_active=True)
+        queryset = Product.objects.filter(is_active=True).order_by("-created_at")
 
         gender = self.request.query_params.get("gender")
         category = self.request.query_params.get("category")
+        search = self.request.query_params.get("search")
 
         if gender:
             queryset = queryset.filter(gender__slug=gender)
 
         if category:
             queryset = queryset.filter(category__slug=category)
+
+        if search:
+            queryset = queryset.filter(
+                Q(name__icontains=search) | Q(description__icontains=search)
+            )
 
         return queryset
 
@@ -96,13 +111,26 @@ class MenuView(APIView):
 
 class ProductDetailBySlugView(RetrieveAPIView):
     serializer_class = ProductSerializer
+    queryset = Product.objects.filter(is_active=True)
+
+    lookup_field = "slug"
+    lookup_url_kwarg = "product_slug"
+
+    # def get_queryset(self):
+    #     return Product.objects.filter(
+    #         is_active=True,
+    #         gender__slug=self.kwargs["gender_slug"],
+    #         category__slug=self.kwargs["category_slug"],
+    #     )
+
+    # lookup_field = "slug"
+    # lookup_url_kwarg = "product_slug"
+
+class FeaturedProductListView(ListAPIView):
+    serializer_class = ProductSerializer
 
     def get_queryset(self):
         return Product.objects.filter(
             is_active=True,
-            gender__slug=self.kwargs["gender_slug"],
-            category__slug=self.kwargs["category_slug"],
+            is_featured=True
         )
-
-    lookup_field = "slug"
-    lookup_url_kwarg = "product_slug"
