@@ -47,31 +47,6 @@ class ProductListView(generics.ListAPIView):
         return queryset
 
 
-class ProductByGenderView(ListAPIView):
-    serializer_class = ProductSerializer
-
-    def get_queryset(self):
-        gender_slug = self.kwargs["gender_slug"]
-
-        return Product.objects.filter(
-            gender__slug=gender_slug,
-            is_active=True
-        )
-
-class ProductByGenderCategoryView(ListAPIView):
-    serializer_class = ProductSerializer
-
-    def get_queryset(self):
-        gender_slug = self.kwargs["gender_slug"]
-        category_slug = self.kwargs["category_slug"]
-
-        return Product.objects.filter(
-            gender__slug=gender_slug,
-            category__slug=category_slug,
-            is_active=True
-        )
-
-
 class MenuView(APIView):
     def get(self, request):
         data = []
