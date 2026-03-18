@@ -47,14 +47,6 @@ class ProductListView(generics.ListAPIView):
         return queryset
 
 
-class FeaturedProductListView(generics.ListAPIView):
-    queryset = Product.objects.filter(
-        is_active=True,
-        is_featured=True
-    )
-    serializer_class = ProductSerializer
-
-
 class ProductByGenderView(ListAPIView):
     serializer_class = ProductSerializer
 

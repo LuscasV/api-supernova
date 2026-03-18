@@ -3,11 +3,10 @@ from .models import (
     Gender,
     Category,
     Product,
-    ProductColor,
     Size,
     Color,
     ProductImage,
-    ProductSize,
+    ProductVariant
 )
 
 # =========================
@@ -37,17 +36,10 @@ class ProductImageInline(admin.TabularInline):
     extra = 1
 
 
-# =========================
-# PRODUCT SIZE INLINE
-# =========================
-class ProductSizeInline(admin.TabularInline):
-    model = ProductSize
+class ProductVariantInline(admin.TabularInline):
+    model = ProductVariant
     extra = 1
 
-class ProductColorInline(admin.TabularInline):
-    model = ProductColor
-    extra = 1
-    
 # =========================
 # PRODUCT
 # =========================
@@ -67,8 +59,7 @@ class ProductAdmin(admin.ModelAdmin):
 
     inlines = [
         ProductImageInline,
-        ProductSizeInline,
-        ProductColorInline,
+        ProductVariantInline
     ]
 
 

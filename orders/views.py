@@ -3,8 +3,10 @@ from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
+from django.db import transaction
 from .serializers import OrderCreateSerializer, OrderSerializer
 from .models import Order
+from products.models import ProductVariant
 
 class OrderCreateView(CreateAPIView):
     serializer_class = OrderCreateSerializer
@@ -57,8 +59,25 @@ class CancelOrderView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        order.status = "canceled"
-        order.save()
+        with transaction.atomic(): # Segurança total
+            # DEVOLVER ESTOQUE
+            for item in order.items.all():
+
+                try:
+                    variant = ProductVariant.objects.get(
+                        product=item.product,
+                        size__name=item.variant.size,
+                        color__name=item.variant.color
+                    )
+
+                    variant.stock += item.quantity
+                    variant.save()
+                except ProductVariant.DoesNotExist:
+                    pass 
+
+            # CANCELAR PEDIDO   
+            order.status = "canceled"
+            order.save()
 
         return Response(
             {"detail": "Pedido cancelado com sucesso."},

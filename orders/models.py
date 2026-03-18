@@ -1,7 +1,7 @@
 from django.db import models
 from django.conf import settings
 from django.utils import timezone
-from products.models import Product
+from products.models import Product, ProductVariant
 
 class Order(models.Model):
     STATUS_CHOICES = [
@@ -38,6 +38,8 @@ class Order(models.Model):
         default="pending",
     )
 
+    status_updated_at = models.DateTimeField(auto_now=True)
+
     total = models.DecimalField(
         max_digits=10,
         decimal_places=2,
@@ -72,8 +74,10 @@ class OrderItem(models.Model):
 
     quantity = models.PositiveIntegerField()
     price = models.DecimalField(max_digits=10, decimal_places=2)
-    size = models.CharField(max_length=10)
-    color = models.CharField(max_length=30)
+    variant = models.ForeignKey(
+        ProductVariant,
+        on_delete=models.PROTECT
+    )
 
     def get_total(self): 
         return self.quantity * self.price
