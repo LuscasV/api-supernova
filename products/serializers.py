@@ -3,11 +3,10 @@ from .models import (
     Gender,
     Category,
     Product,
-    ProductColor,
     Size,
     Color,
     ProductImage,
-    ProductSize,
+    ProductVariant,
 )
 
 
@@ -33,9 +32,9 @@ class CategorySerializer(serializers.ModelSerializer):
     def get_children(self, obj):
         return [
             {
-                "id": obj.child.id,
-                "name": obj.child.name,
-                "slug": obj.child.slug,
+                "id": child.id,
+                "name": child.name,
+                "slug": child.slug,
             }
             for child in obj.subcategories.all()
         ]
@@ -58,18 +57,6 @@ class ColorSerializer(serializers.ModelSerializer):
         model = Color
         fields = ["id", "name", "hex_code"]
 
-
-# =========================
-# PRODUCT SIZE (estoque)
-# =========================
-class ProductSizeSerializer(serializers.ModelSerializer):
-    size = SizeSerializer()
-
-    class Meta:
-        model = ProductSize
-        fields = ["id", "size", "stock"]
-
-
 # =========================
 # PRODUCT IMAGE
 # =========================
@@ -78,14 +65,19 @@ class ProductImageSerializer(serializers.ModelSerializer):
         model = ProductImage
         fields = ["id", "image", "is_main"]
 
-class ProductColorSerializer(serializers.ModelSerializer):
+
+class ProductVariantSerializer(serializers.ModelSerializer):
+    size = SizeSerializer()
     color = ColorSerializer()
 
     class Meta:
-        model = ProductColor
-        fields = ["id", "color", "stock"]
-
-
+        model = ProductVariant
+        fields = [
+            "id",
+            "size",
+            "color",
+            "stock"
+        ]
 
 # =========================
 # PRODUCT (principal)
@@ -94,8 +86,7 @@ class ProductSerializer(serializers.ModelSerializer):
     gender = GenderSerializer(read_only=True)
     category = CategorySerializer(read_only=True)
     images = ProductImageSerializer(many=True, read_only=True)
-    sizes = ProductSizeSerializer(many=True, read_only=True)
-    colors = ProductColorSerializer(many=True, read_only=True)
+    variants = ProductVariantSerializer(many=True, read_only=True)
 
     class Meta:
         model = Product
@@ -107,9 +98,9 @@ class ProductSerializer(serializers.ModelSerializer):
             "gender",
             "category",
             "images",
-            "sizes",
-            "colors",
+            "variants",
             "is_featured",
             "created_at",
         ]
+
 

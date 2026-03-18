@@ -65,23 +65,6 @@ class Product(models.Model):
     def __str__(self):
         return self.name
 
-class ProductSize(models.Model):
-    product = models.ForeignKey(
-        Product,
-        on_delete=models.CASCADE,
-        related_name="product_sizes"
-    )
-    size = models.ForeignKey(
-        Size,
-        on_delete=models.CASCADE
-    )
-    stock = models.IntegerField(default=0)
-
-    def __str__(self):
-        return f"{self.product.name} - {self.size.name}"
-
-    
-
 class ProductImage(models.Model):
     product = models.ForeignKey(
         Product,
@@ -94,20 +77,28 @@ class ProductImage(models.Model):
     def __str__(self):
         return f"Imagem de {self.product.name}"
     
-class ProductColor(models.Model):
+
+class ProductVariant(models.Model):
     product = models.ForeignKey(
         Product,
-        related_name="colors",
+        on_delete=models.CASCADE,
+        related_name="variants"
+    )
+
+    size = models.ForeignKey(
+        Size,
         on_delete=models.CASCADE
     )
+
     color = models.ForeignKey(
         Color,
         on_delete=models.CASCADE
     )
+
     stock = models.PositiveIntegerField(default=0)
 
     class Meta:
-        unique_together = ("product", "color")
-
+        unique_together = ("product", "size", "color")
+    
     def __str__(self):
-        return f"{self.product.name} - {self.color.name}"
+        return f"{self.product.name} - {self.size.name} - {self.color.name}"
