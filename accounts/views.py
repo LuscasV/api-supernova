@@ -3,20 +3,78 @@ from rest_framework.generics import ListCreateAPIView, ListAPIView, RetrieveUpda
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError
+from django.contrib.auth.tokens import default_token_generator
+from django.core.mail import send_mail
+from django.db import transaction
+from django.urls import reverse
+from django.conf import settings
+from django.shortcuts import get_object_or_404
 from rest_framework import status
-from .models import Address, WishlistItem
+
+from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+
+from .models import Address, User, WishlistItem
 from .serializers import RegisterSerializer, AddressSerializer, WishlistSerializer, AddWishlistSerializer
 
 class RegisterView(APIView):
     def post(self, request):
         serializer = RegisterSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        serializer.save()
+        # Bloco try para se der erro no register não salvar o user
+        try:
+            with transaction.atomic():
+
+                user = serializer.save()
+
+                # GERAR TOKEN
+                token = default_token_generator.make_token(user)
+
+                #GERAR LINK
+                verification_link = f"http://127.0.0.1:8000/api/accounts/verify/{user.id}/{token}/"
+
+                # ENVIAR EMAIL
+                send_mail(
+                    subject="Confirme seu email",
+                    message=f"Clique no link para ativar sua conta: {verification_link}",
+                    from_email=settings.EMAIL_HOST_USER,
+                     recipient_list=[user.email],
+                )
+        except Exception as e:
+            raise ValidationError("Erro ao criar usuário. Tente novamente!")
 
         return Response(
-            {"message": "Usuário criado com sucesso"},
+            {"message": "Usuário criado com sucesso. Verique seu email!"},
             status=status.HTTP_201_CREATED
         )
+    
+
+class VerifyEmailView(APIView):
+    def get(self, request, user_id, token):
+        user = get_object_or_404(User, id=user_id)
+
+        if user.is_verified:
+            return Response({"message": "Email já verificado"})
+
+        if default_token_generator.check_token(user, token):
+            user.is_verified = True
+            user.save()
+
+            return Response({"message": "Email verificado com sucesso!"})
+        return Response({"error": "Token inválido"}, status=400)
+
+class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
+    def validate(self, attrs):
+        data = super().validate(attrs)
+    
+    # Bloquear login se usuário não verificado
+        if not self.user.is_verified:
+            raise ValidationError("Verifique seu email antes de fazer login")
+    
+        return data
+
+class MyTokenObtainPairView(TokenObtainPairView):
+    serializer_class = MyTokenObtainPairSerializer
 
 class AddressListCreateView(ListCreateAPIView):
     serializer_class = AddressSerializer
