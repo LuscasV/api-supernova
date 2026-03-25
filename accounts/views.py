@@ -8,8 +8,11 @@ from django.core.mail import send_mail
 from django.db import transaction
 from django.urls import reverse
 from django.conf import settings
+from django.utils import timezone
+from datetime import timedelta
 from django.shortcuts import get_object_or_404
 from rest_framework import status
+from django.contrib.auth import get_user_model
 
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
@@ -54,7 +57,7 @@ class VerifyEmailView(APIView):
         user = get_object_or_404(User, id=user_id)
 
         if user.is_verified:
-            return Response({"message": "Email já verificado"})
+            return Response({"message": "Email já verificado"}, status=200)
 
         if default_token_generator.check_token(user, token):
             user.is_verified = True
@@ -62,6 +65,55 @@ class VerifyEmailView(APIView):
 
             return Response({"message": "Email verificado com sucesso!"})
         return Response({"error": "Token inválido"}, status=400)
+
+User = get_user_model()
+
+class ResendVerificationEmailView(APIView):
+    def post(self, request):
+        email = request.data.get("email")
+
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            return Response(
+                {"error": "Usuário não encontrado"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        if user.is_verified:
+            return Response(
+                {"message": "Email já verificado"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # LIMITE PARA EVITAR SPAM DE RESEND VERIFICATION
+        if user.last_verification_email:
+            diff = timezone.now() - user.last_verification_email
+
+            if diff < timedelta(minutes=5):
+                return Response(
+                    {"error": "Aguarde antes de solicitar outro email."},
+                    status=status.HTTP_429_TOO_MANY_REQUESTS
+                )
+        
+        token = default_token_generator.make_token(user)
+        verification_link = f"http://127.0.0.1:8000/api/accounts/verify/{user.id}/{token}/"
+
+        send_mail(
+                    subject="Confirme seu email",
+                    message=f"Clique no link para ativar sua conta: {verification_link}",
+                    from_email=settings.EMAIL_HOST_USER,
+                    recipient_list=[user.email],
+                    fail_silently=False,
+                )
+        
+        # Atualiza data do envio
+        user.last_verification_email = timezone.now()
+        user.save(update_fields=["last_verification_email"])
+
+        return Response(
+            {"message": "Email de verificação reenviado"},
+            status=status.HTTP_200_OK
+        )
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
