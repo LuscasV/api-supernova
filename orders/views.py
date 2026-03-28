@@ -64,12 +64,7 @@ class CancelOrderView(APIView):
             for item in order.items.all():
 
                 try:
-                    variant = ProductVariant.objects.get(
-                        product=item.product,
-                        size__name=item.variant.size,
-                        color__name=item.variant.color
-                    )
-
+                    variant = item.variant
                     variant.stock += item.quantity
                     variant.save()
                 except ProductVariant.DoesNotExist:
