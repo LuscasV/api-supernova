@@ -8,6 +8,34 @@ from .serializers import OrderCreateSerializer, OrderSerializer
 from .models import Order
 from products.models import ProductVariant
 
+
+class PayOrderView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, pk):
+        method = request.data.get("method")
+
+        if method not in ["pix", "boleto", "card"]:
+            return Response({"error": "Método inválido"}, status=400)
+        
+        try:
+            order = Order.objects.get(pk=pk, user=request.user)
+        except Order.DoesNotExist:
+            return Response({"error": "Pedido não encontrado"}, status=404)
+        
+        if order.status != "pending":
+            return Response({"error": "Pedido já foi pago ou cancelado"}, status=400)
+        
+        #simulação de pagamento
+        order.payment_method = method
+        order.status = "paid"
+        order.save()
+
+        return Response({
+            "message": f"Pagamento via {method} realizado com sucesso",
+            "status": order.status
+        })
+
 class OrderCreateView(CreateAPIView):
     serializer_class = OrderCreateSerializer
     permission_classes = [IsAuthenticated]

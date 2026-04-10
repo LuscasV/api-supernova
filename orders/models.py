@@ -10,7 +10,20 @@ class Order(models.Model):
         ("shipped", "Shipped"),
         ("delivered", "Delivered"),
         ("canceled", "Canceled"),
-    ]  
+    ] 
+
+    PAYMENT_CHOICES = [
+        ("pix", "PIX"),
+        ("boleto", "Boleto"),
+        ("card", "Cartão"),
+    ]
+
+    payment_method = models.CharField(
+        max_length=20,
+        choices=PAYMENT_CHOICES,
+        null=True,
+        blank=True
+    )
 
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
