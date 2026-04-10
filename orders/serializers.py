@@ -34,6 +34,7 @@ class OrderItemSerializer(serializers.ModelSerializer):
 class OrderSerializer(serializers.ModelSerializer):
     estimated_delivery = serializers.SerializerMethodField()
     items = OrderItemSerializer(many=True)
+    payment_method = serializers.CharField(source="get_payment_method_display", read_only=True)
 
     def get_estimated_delivery(self, obj):
         if obj.status == "pending":
@@ -75,6 +76,7 @@ class OrderSerializer(serializers.ModelSerializer):
             "id",
             "order_number",
             "status",
+            "payment_method",
             "total",
             "created_at",
             "estimated_delivery",
