@@ -78,6 +78,12 @@ API RESTful para um sistema de e-commerce desenvolvida com Django e Django Rest 
 | POST   | /api/accounts/login  | Login do usuário     |
 | POST   | api/accounts/register | Cadastro de usuário |
 | POST   | /api/accounts/resend-verification/ | Reenvio de confirmação |
+| POST   | /api/accounts/password-reset/ | Alterar a senha |
+| POST   | /api/accounts/address/ | Adicionar endereço |
+| GET   | /api/accounts/address/ | Listar endereços |
+| GET   | /api/accounts/wishlist/ | Listar favoritos |
+| POST   | /api/accounts/wishlist/add/ | Adicionar aos favoritos |
+| DELETE   | /api/accounts/wishlist/id/remove/ | Remover item |
 | GET    | /products/ | Listar produtos |
 | GET    | /products/?gender=&category= | Filtrar produtos |
 | GET    | /cart/ | Listar carrinho |
@@ -95,13 +101,13 @@ A API utiliza JWT (JSON Web Token).
 ### Login:
 ```http
 POST /auth/login/
-```
+
 Resposta:
 {
   "access": "token",
   "refresh": "token"
 }
-
+```
 Use o token no header:
 
 Authorization: Bearer seu_token
