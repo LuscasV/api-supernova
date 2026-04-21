@@ -31,7 +31,7 @@ class CartItem(models.Model):
     quantity = models.PositiveIntegerField(default=1)
 
     def get_total(self):
-        return self.product.price * self.quantity
+        return self.product.get_current_price() * self.quantity
     
     class Meta:
         unique_together = ("cart", "variant")

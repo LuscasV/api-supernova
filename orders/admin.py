@@ -9,3 +9,7 @@ class OrderItemInline(admin.TabularInline):
 class OrderAdmin(admin.ModelAdmin):
     list_display = ("id", "user", "status", "total", "created_at")
     inlines = [OrderItemInline]
+
+    readonly_fields = ("order_number",)
+
+    exclude = ("order_number",)
