@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils import timezone
 
 class Gender(models.Model):
     name = models.CharField(max_length=20)  # Masculino, Feminino, Unissex
@@ -44,6 +45,14 @@ class Product(models.Model):
     name = models.CharField(max_length=200)
     description = models.TextField()
     price = models.DecimalField(max_digits=10, decimal_places=2)
+    promo_price = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True
+    )
+    promo_start = models.DateTimeField(null=True, blank=True)
+    promo_end = models.DateTimeField(null=True, blank=True)
     slug = models.SlugField(unique=True)
 
     gender = models.ForeignKey(
@@ -64,6 +73,19 @@ class Product(models.Model):
 
     def __str__(self):
         return self.name
+    
+    def get_current_price(self):
+        now = timezone.now()
+
+        if (
+            self.promo_price
+            and self.promo_start
+            and self.promo_end
+            and self.promo_start <= now <= self.promo_end
+        ):
+            return self.promo_price
+        
+        return self.price
 
 class ProductImage(models.Model):
     product = models.ForeignKey(

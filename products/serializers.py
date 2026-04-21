@@ -88,6 +88,22 @@ class ProductSerializer(serializers.ModelSerializer):
     images = ProductImageSerializer(many=True, read_only=True)
     variants = ProductVariantSerializer(many=True, read_only=True)
 
+    current_price = serializers.SerializerMethodField()
+    is_on_sale = serializers.SerializerMethodField()
+    discount_percentage = serializers.SerializerMethodField()
+
+    def get_current_price(self, obj):
+        return obj.get_current_price()
+    
+    def get_is_on_sale(self, obj):
+        return obj.get_current_price() != obj.price
+    
+    def get_discount_percentage(self, obj): 
+        if obj.price > 0 and obj.get_current_price() < obj.price:
+            return round(100 - (obj.get_current_price() / obj.price * 100))
+        return 0
+    
+
     class Meta:
         model = Product
         fields = [
@@ -95,6 +111,9 @@ class ProductSerializer(serializers.ModelSerializer):
             "name",
             "slug",
             "price",
+            "current_price",
+            "is_on_sale",
+            "discount_percentage",
             "gender",
             "category",
             "images",

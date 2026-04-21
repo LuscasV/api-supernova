@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.core.exceptions import ValidationError
 from .models import (
     Gender,
     Category,
@@ -50,6 +51,10 @@ class ProductAdmin(admin.ModelAdmin):
         "gender",
         "category",
         "price",
+        "promo_price",
+        "is_on_sale",
+        "promo_start",
+        "promo_end",
         "is_featured",
         "is_active",
     )
@@ -62,6 +67,21 @@ class ProductAdmin(admin.ModelAdmin):
         ProductVariantInline
     ]
 
+    def is_on_sale(self, obj):
+        return obj.get_current_price() != obj.price
+    
+    is_on_sale.boolean = True
+    is_on_sale.short_description = "Em promoção"
+
+    def save_model(self, request, obj, form, change):
+        if obj.promo_price and obj.promo_price >= obj.price:
+            raise ValidationError("O preço promocional deve ser menor que o preço normal.")
+
+        if obj.promo_start and obj.promo_end:
+            if obj.promo_start > obj.promo_end:
+                raise ValidationError("A data de início não pode ser maior que a data final.")
+            
+        super().save_model(request, obj, form, change)
 
 # =========================
 # SIZE

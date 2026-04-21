@@ -142,6 +142,7 @@ class OrderCreateSerializer(serializers.Serializer):
             
                 product = variant.product
                 quantity = item["quantity"]
+                current_price = product.get_current_price()
             
                 # VALIDAR ESTOQUE
                 if variant.stock < quantity:
@@ -158,11 +159,11 @@ class OrderCreateSerializer(serializers.Serializer):
                     order=order,
                     product=product,
                     quantity=quantity,
-                    price=product.price,
+                    price=current_price,
                     variant=variant
                 )
 
-                total += product.price * quantity
+                total += current_price * quantity
 
         order.total = total
         order.save()

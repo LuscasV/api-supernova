@@ -7,6 +7,15 @@ class CartItemSerializer(serializers.ModelSerializer):
     color = serializers.CharField(source="variant.color.name", read_only=True)
     total = serializers.SerializerMethodField()
 
+    unit_price = serializers.SerializerMethodField()
+    unit_price_promo = serializers.SerializerMethodField()
+
+    def get_unit_price(self, obj):
+        return obj.product.price
+    
+    def get_unit_price_promo(self, obj):
+        return obj.product.get_current_price()
+
     def get_total(self, obj):
         return obj.get_total()
     
@@ -19,7 +28,9 @@ class CartItemSerializer(serializers.ModelSerializer):
             "size",
             "color",
             "quantity",
-            "total"
+            "unit_price",
+            "unit_price_promo",
+            "total",
         ]
 
 class CartSerializer(serializers.ModelSerializer):
