@@ -137,7 +137,8 @@ class PasswordResetRequestView(APIView):
 
             if diff < timedelta(minutes=5):
                 return Response(
-                    {"error": "Um link de reset de senha já foi enviado para seu email, caso não tenha recebido aguarde ou tente novamente mais tarde."}
+                    {"error": "Um link de reset de senha já foi enviado para seu email, caso não tenha recebido aguarde ou tente novamente mais tarde."},
+                    status=429
                 )
         # gerar token de reset
         uid = urlsafe_base64_encode(force_bytes(user.pk))

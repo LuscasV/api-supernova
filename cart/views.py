@@ -39,12 +39,12 @@ class CheckoutView(APIView):
         except Cart.DoesNotExist:
             return Response({"error": "Carrinho vazio"}, status=400)
         
-        items = cart.items.select_related("variant__product").select_for_update()
-
-        if not items.exists():
-            return Response({"error": "Carrinho vazio"}, status=400)
         try:
             with transaction.atomic():
+                items = cart.items.select_related("variant__product").select_for_update()
+
+                if not items.exists():
+                    return Response({"error": "Carrinho vazio"}, status=400)
                 # Criar pedido
                 order = Order.objects.create(
                     user=user,
