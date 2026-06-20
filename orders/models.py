@@ -96,4 +96,4 @@ class OrderItem(models.Model):
         return self.quantity * self.price
 
     def __str__(self):
-        return f"{self.product.name} - {self.quantity} - {self.size} - {self.color}"
+        return f"{self.product.name} - {self.quantity} - {self.variant.size.name} - {self.variant.color.name}"
